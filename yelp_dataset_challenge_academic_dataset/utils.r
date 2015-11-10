@@ -94,11 +94,10 @@ similarity.function <- function(user_i, user_j, graph)
 }
 
 # also from Zhou 2007
-cf.predicted.score <- function(graph, user, object)
+cf.predicted.score <- function(graph, user, object, S)
 {
     numerator <- 0
     denominator <- 0
-    load('similarity_matrix.RData')
     if (get.edge.ids(graph,c(user,object)) == 0)
     {
         user.list <- V(graph)[V(graph)$isuser]
@@ -115,4 +114,42 @@ cf.predicted.score <- function(graph, user, object)
         # get real recommended score if the user has rated the restaurant
         return(-1)
     }
+}
+
+# Following function is for collaborative filtering. Need similarity matrix between nodes!!!
+generate.similarityMatrix <- function(gr, outfile)
+{
+    # get list of users
+    user.list <- V(gr)[V(gr)$isuser]
+    # initialize similarity matrix
+    S <- Matrix(0,length(user.list), length(user.list))
+    # for each user
+    for (i in c(1:length(user.list)))
+    {
+        pth <- proc.time()
+        # find the similarity of each user to user_i
+        S[i,] <- sapply(user.list, similarity.function, user_j=user.list[i], graph=gr)
+        print(proc.time()-pth)
+    }
+    save(S, file=outfile)
+}
+
+collaborative.filter <- function(user, train.graph, similarity_matrix)
+{
+    cf.ps.handle <- Curry(cf.predicted.score, graph=train.graph, user=user, S=similarity_matrix)
+    restaurant.indices <- which(V(train.graph)$type %in% 1) # gets indices of restaurants
+    pth <- proc.time()
+    outarray <- mclapply(restaurant.indices, cf.ps.handle, mc.preschedule=TRUE, mc.cores=detectCores())
+    print(proc.time()-pth)
+    businesses <- names(V(train.graph)[restaurant.indices])
+    names(outarray) <- businesses
+    ratings.list <- outarray
+    save(ratings.list, file=paste('cf_ratings/cf_ratings_user',toString(user),'.RData', sep=''))
+}
+
+makeAndSaveW <- function(gr, outfilename='object_projection_train.RData')
+{
+    vs <- which(V(gr)$type %in% 1)
+    W <- get.W(vs, gr)
+    save(W,file=outfilename)
 }
