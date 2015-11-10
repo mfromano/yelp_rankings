@@ -103,14 +103,15 @@ takes a list of user ids and returns a list of dictionaries containing user obje
 '''
 def get_user_by_id(user_id_list):
     user_list = []
-    with open('yelp_academic_dataset_user.json') as user_data:
+    with open('../../yelp_raw_data/yelp_academic_dataset_user.json') as user_data:
         for user in user_data:
             if json.loads(user)['user_id'] in user_id_list:
                 user_list.append(json.loads(user))
+    return user_list
 
 def get_restaurant_by_id(id_number):
     restaurant_list = []
-    with open('yelp_academic_dataset_business.json') as restaurant_data:
+    with open('../../yelp_raw_data/yelp_academic_dataset_business.json') as restaurant_data:
         for restaurant in restaurant_data:
             if json.loads(restaurant)['business_id'] == id_number:
                 return json.loads(restaurant)['name']

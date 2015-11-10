@@ -21,17 +21,15 @@ collaborative.filter <- function(user)
 
 load('review_edges_train.RData')
 user.list <- V(train.graph)[V(train.graph)$isuser]
-# S <- Matrix(0,length(user.list), length(user.list))
-# for (i in c(1:length(user.list)))
-# {
-#     pth <- proc.time()
-#     S[i,] <- sapply(user.list, similarity.function, user_j=user.list[i], graph=train.graph)
-#     print(proc.time()-pth)
-# }
-# save(S, file='similarity_matrix.RData')
-
-sapply(user.list, collaborative.filter)
-
+S <- Matrix(0,length(user.list), length(user.list))
+for (i in c(1:length(user.list)))
+{
+    pth <- proc.time()
+    S[i,] <- sapply(user.list, similarity.function, user_j=user.list[i], graph=train.graph)
+    print(proc.time()-pth)
+}
+save(S, file='similarity_matrix.RData')
+    
 # copy and paste the next few lines to....
 hitting.rate <- function(graph.train, graph.probe, user.id, L)
 {   
@@ -77,13 +75,13 @@ for (i in c(1:num.probes))
 }
 save(x, file='hittingRateCF.RData')
 
-library(ggplot2)
-load('review_edges_train.RData')
-load('review_edges_probe.RData')
-num.probes <- length(V(probe.graph)[V(probe.graph)$isuser])
-L <- seq(from=1,to=num.probes, by=20)
-load('hittingRateCF.RData')
-df <- as.data.frame(data.matrix(x))
-mns <- apply(x, 2, mean)
-errs <- 2*sqrt(apply(x, 2, var))
-qplot(L, mns) # +
+# library(ggplot2)
+# load('review_edges_train.RData')
+# load('review_edges_probe.RData')
+# num.probes <- length(V(probe.graph)[V(probe.graph)$isuser])
+# L <- seq(from=1,to=num.probes, by=20)
+# load('hittingRateCF.RData')
+# df <- as.data.frame(data.matrix(x))
+# mns <- apply(x, 2, mean)
+# errs <- 2*sqrt(apply(x, 2, var))
+# qplot(L, mns) # +

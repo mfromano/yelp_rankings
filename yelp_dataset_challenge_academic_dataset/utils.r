@@ -24,6 +24,7 @@ w.ij <- function(graph, i, j)
     }
 }
 
+# returns W matrix with entries i,j corresponding to directed weight from i->j of objects
 get.W <- function(vids, graph)
 {
     W <- Matrix(0,length(vids),length(vids))
@@ -37,6 +38,21 @@ get.W <- function(vids, graph)
     return(W)
 }
 
+# Modify to code as zeros non-existent entries in
+reduce.W <- function(original.graph, new.graph, oldW)
+{
+    num.users.original <- length(V(original.graph)[V(original.graph)$isuser])
+    objects.original <- V(original.graph)[!V(original.graph)$isuser]
+
+    objects.new <- V(new.graph)[!V(new.graph)$isuser]
+    num.users.new <- length(V(new.graph)[V(new.graph)$isuser])
+    sd <- setdiff(objects.original, objects.new)-num.users.original
+}
+
+# '''
+# FOUND BUG IN CODE: need to make sure that the indices in Wmat correspond to the
+# corresponding indices in the probe matrix!!!
+# '''
 # Now make a function that recreates formula (12) from Zhou 2007
 # for a given user, get f'(o_j) for each object (restaurant)
 f.prime <- function(graph, Wmat, user)
@@ -46,9 +62,13 @@ f.prime <- function(graph, Wmat, user)
     # next, for a given object, get the sum of the similarities it has to the
     # restaurants that the user likes
     offset <- length(which(V(graph)$isuser %in% 1))
+    # get indices of objects that we will search for in Wmat
     object.list <- which(V(graph)$type %in% 1)-offset
+    # get indices of neighbors of W that we will look for
     nbhd.ind <- which(V(graph) %in% nbhd)-offset
+    # for each object in Wmat, get sum of entries of all of the users in that neighborood
     fp <- sapply(object.list, function(obj) {return(sum(Wmat[obj,nbhd.ind]))})
+    # get names of objects
     vs <- which(V(graph)$type %in% 1)
     names(fp) <- names(V(graph)[vs])
     fp <- fp[!(names(fp) %in% names(neighbors(graph=graph,v=user)))]

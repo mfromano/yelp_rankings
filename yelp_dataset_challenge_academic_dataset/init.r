@@ -17,6 +17,11 @@ init.graph <- function(file='review_edges.csv')
     return(gr)
 }
 
+downsample.graph <- function()
+{
+    load('review_edges_ds.RData')
+}
+
 split.graphs <- function()
 {
     load('review_edges_ds.RData')
