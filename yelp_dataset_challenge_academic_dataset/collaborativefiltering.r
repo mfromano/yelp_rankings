@@ -1,10 +1,32 @@
+
+# How to use this file:
+# First, get the similarity matrix using generate.similarityMatrix()
+# Next, use the similarity matrix to use collaborative filtering using:
+#       collaborative.filter(user, train.graph, similarity.matrix)
+# Finally, look to see how well the collaborative filter performed by computing the hitting rate
+# 
+# Example code:
+# ############################################
+# load('review_edges_train.RData')
+# 
+# generate.similarityMatrix(gr=train.graph, outfile='similarity_matrix_train.RData')
+# 
+# load('similarity_matrix_train.RData')
+# 
+# sapply(X=which(V(gr)$isuser %in% 1), FUN=collaborative.filter, train.graph=train.graph, similarity_matrix=similarity.matrix)
+# 
+# load('review_edges_probe.RData')
+# 
+# get.hitting.rate.cf(probe.graph, train.graph, similarity_matrix='similarity_matrix_train.RData', outfile='hittingRateCF.RData')
+# #############################################
+
 source('init.r')
 source('utils.r')
 
-hitting.rate <- function(graph.train, graph.probe, user.id, L)
+hitting.rate <- function(graph.train, graph.probe, user.id, similarity.matrix, L)
 {   
     # Get f prime for particular user using test data
-    load('similarity_matrix.RData')
+    load(similarity.matrix)
     vs <- which(V(graph.train)$type %in% 1)
     user <- match(user.id, names(V(graph.train)))
     load(paste('cf_ratings/cf_ratings_user',toString(user),'.RData', sep=''))
@@ -25,7 +47,7 @@ hitting.rate <- function(graph.train, graph.probe, user.id, L)
 }
 
 
-get.hitting.rate.cf <- function(probe.graph, train.graph, outfile='hittingRateCF.RData')
+get.hitting.rate.cf <- function(probe.graph, train.graph, similarity.matrix, outfile='hittingRateCF.RData')
 {
     users.in.probe <- length(V(probe.graph)[V(probe.graph)$isuser])
     L <- seq(from=1,to=users.in.probe, by=20)
@@ -35,18 +57,28 @@ get.hitting.rate.cf <- function(probe.graph, train.graph, outfile='hittingRateCF
     {
         pth <- proc.time()
         user.id <- names(V(probe.graph)[V(probe.graph)$isuser])[i]
-        x[i,] <- unlist(mclapply(X=L, FUN=hitting.rate, graph.probe=probe.graph, graph.train=train.graph, user.id=user.id, mc.preschedule=TRUE, mc.cores=detectCores()))
+        x[i,] <- unlist(mclapply(X=L, FUN=hitting.rate, graph.probe=probe.graph, graph.train=train.graph, similarity.matrix=similarity.matrix, user.id=user.id, mc.preschedule=TRUE, mc.cores=detectCores()))
         # x[i,] <- sapply(X=L, FUN=hitting.rate, graph.probe=probe.graph, graph.train=train.graph, user.id=user.id)
         print(proc.time() - pth)
     }
     save(x, outfile)
 }
 
-load('review_edges_train.RData')
-generate.similarityMatrix(gr=train.graph, outfile='similarity_matrix_train.RData')
+run.collaborative.filter <- function(threshold=0)
+{
+ load(paste('review_edges_train', toString(threshold),'.RData', sep=''))
+ generate.similarityMatrix(gr=train.graph, outfile=paste('similarity_matrix_train',toString(threshold), '.RData', sep=''))
+ load(paste('similarity_matrix_train',toString(threshold), '.RData', sep=''))
+ sapply()
+}
 
-load('review_edges_probe.RData')
-get.hitting.rate.cf(train.graph, probe.graph)
+# load('review_edges_train.RData')
+# generate.similarityMatrix(gr=train.graph, outfile='similarity_matrix_train.RData')
+
+# load('similarity_matrix_train.RData')
+
+# load('review_edges_probe.RData')
+# get.hitting.rate.cf(probe.graph, train.graph, similarity_matrix='similarity_matrix_train.RData', outfile='hittingRateCF.RData')
 
 # library(ggplot2)
 # load('review_edges_train.RData')

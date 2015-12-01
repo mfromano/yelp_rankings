@@ -1,3 +1,17 @@
+# How to use:
+# First, initialize graph
+# Next, downsample the graph with a specified threshold
+# Finally, split the grpah into training and probe sets
+# Example code (the following thresholds the graph at 10 and splits randomly into two groups:
+if (FALSE)
+{
+    gr <- init.graph()
+    downsample.graph(threshold=10)
+    split.graphs(threshold=10)
+}
+# ##################################
+
+
 library(igraph)
 library(functional)
 library(parallel)
@@ -20,7 +34,7 @@ init.graph <- function(file='review_edges.csv')
 downsample.graph <- function(threshold=10)
 {
     gr <- init.graph()
-    gr <- graph.threshold(graph=gr, threshold=threshold)
+    gr <- graph.threshold(gr=gr, threshold=threshold)
     save(gr, file=paste('review_edges_ds', toString(threshold), '.RData', sep=''))
 }
 

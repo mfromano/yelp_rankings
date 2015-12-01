@@ -1,5 +1,6 @@
 source('init.r')
 source('utils.r')
+
 # for each entry in probe
 #     if oj is in ui's recommendation list
 #       ui-oj is a "hit"
@@ -42,10 +43,13 @@ get.hitting.rate.nbi <- function(W, probe.graph, train.graph, outfilename='hitti
     save(x, file=outfilename)
 }
 
-load('review_edges_train.RData')
-makeAndSaveW(train.graph, outfilename='object_projection_train.RData')
+run.nbi <- function(threshold=10)
+{
+    load(paste('review_edges_train', toString(threshold), '.RData'))
+    makeAndSaveW(train.graph, outfilename=paste('object_projection_train', toString(threshold), '.RData'))
 
-load('object_projection_train.RData')
-load('review_edges_probe.RData')
-load('review_edges_train.RData')
-get.hitting.rate.nbi(W=W, probe.graph=probe.graph, train.graph=train.graph)
+    load(paste('object_projection_train', toString(threshold), '.RData'))
+    load(paste('review_edges_probe', toString(threshold), '.RData'))
+    load(paste('review_edges_train', toString(threshold), '.RData'))
+    get.hitting.rate.nbi(W=W, probe.graph=probe.graph, train.graph=train.graph, outfilename=paste('hittingRateNBI',toString(threshold),'.RData'))
+}
