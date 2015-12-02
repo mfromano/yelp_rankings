@@ -23,7 +23,7 @@
 source('init.r')
 source('utils.r')
 
-hitting.rate <- function(graph.train, graph.probe, user.id, similarity.matrix, L)
+hitting.rate <- function(graph.train, graph.probe, user.id, similarity.matrix, L, threshold)
 {   
     # Get f prime for particular user using test data
     vs <- which(V(graph.train)$type %in% 1)
@@ -57,10 +57,10 @@ get.hitting.rate.cf <- function(probe.graph, train.graph, similarity.matrix, thr
         pth <- proc.time()
         user.id <- names(V(probe.graph)[V(probe.graph)$isuser])[i]
         x[i,] <- unlist(mclapply(X=L, FUN=hitting.rate, graph.probe=probe.graph, graph.train=train.graph, similarity.matrix=similarity.matrix, user.id=user.id, threshold=threshold, mc.preschedule=TRUE, mc.cores=detectCores()))
-        # x[i,] <- sapply(X=L, FUN=hitting.rate, graph.probe=probe.graph, graph.train=train.graph, user.id=user.id)
+        # x[i,] <- sapply(X=L, FUN=hitting.rate, graph.probe=probe.graph, graph.train=train.graph, user.id=user.id, similarity.matrix=similarity.matrix, threshold=threshold)
         print(proc.time() - pth)
     }
-    save(x, outfile)
+    save(x, file=outfile)
 }
 
 run.collaborative.filter <- function(threshold=0)
@@ -70,7 +70,7 @@ run.collaborative.filter <- function(threshold=0)
     load(paste('similarity_matrix_train',toString(threshold), '.RData', sep=''))
     sapply(X=which(V(train.graph)$isuser %in% 1), FUN=collaborative.filter, train.graph=train.graph, similarity_matrix=S, threshold=threshold)
     load(paste('review_edges_probe', toString(threshold),'.RData', sep=''))
-    get.hitting.rate.cf(probe.graph, train.graph, similarity_matrix=S, threshold=threshold, outfile=paste('hittingRateCF',toString(threshold),'.RData', sep=''))
+    get.hitting.rate.cf(probe.graph, train.graph, similarity.matrix=S, threshold=threshold, outfile=paste('hittingRateCF',toString(threshold),'.RData', sep=''))
 }
 
 # load('review_edges_train.RData')
