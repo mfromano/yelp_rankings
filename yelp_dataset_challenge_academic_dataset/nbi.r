@@ -5,10 +5,9 @@ source('utils.r')
 #     if oj is in ui's recommendation list
 #       ui-oj is a "hit"
 #       
-hitting.rate <- function(graph.train, graph.probe, user.id, L)
+hitting.rate <- function(graph.train, graph.probe, user.id, L, W)
 {   
     # Get f prime for particular user using test data
-    load('object_projection_train.RData')
     vs <- which(V(graph.train)$type %in% 1)
     user <- match(user.id, names(V(graph.train)))
     fp <- f.prime(graph=graph.train, Wmat=W, user=user)
@@ -37,7 +36,8 @@ get.hitting.rate.nbi <- function(W, probe.graph, train.graph, outfilename='hitti
     {
         pth <- proc.time()
         user.id <- names(V(probe.graph)[V(probe.graph)$isuser])[i]
-        x[i,] <- unlist(mclapply(X=L, FUN=hitting.rate, graph.probe=probe.graph, graph.train=train.graph, user.id=user.id, mc.preschedule=TRUE, mc.cores=detectCores()))
+        x[i,] <- unlist(mclapply(X=L, FUN=hitting.rate, graph.probe=probe.graph, graph.train=train.graph, W=W, user.id=user.id, mc.preschedule=TRUE, mc.cores=detectCores()))
+        # x[i,] <- unlist(lapply(X=L, FUN=hitting.rate, graph.probe=probe.graph, graph.train=train.graph, user.id=user.id, W=W))
         print(proc.time() - pth)
     }
     save(x, file=outfilename)
@@ -45,11 +45,10 @@ get.hitting.rate.nbi <- function(W, probe.graph, train.graph, outfilename='hitti
 
 run.nbi <- function(threshold=10)
 {
-    load(paste('review_edges_train', toString(threshold), '.RData'))
-    makeAndSaveW(train.graph, outfilename=paste('object_projection_train', toString(threshold), '.RData'))
-
-    load(paste('object_projection_train', toString(threshold), '.RData'))
-    load(paste('review_edges_probe', toString(threshold), '.RData'))
-    load(paste('review_edges_train', toString(threshold), '.RData'))
-    get.hitting.rate.nbi(W=W, probe.graph=probe.graph, train.graph=train.graph, outfilename=paste('hittingRateNBI',toString(threshold),'.RData'))
+    # load(paste('review_edges_train', toString(threshold), '.RData', sep=''))
+    # makeAndSaveW(train.graph, outfilename=paste('object_projection_train', toString(threshold), '.RData', sep=''))
+    load(paste('object_projection_train', toString(threshold), '.RData', sep=''))
+    load(paste('review_edges_probe', toString(threshold), '.RData', sep=''))
+    load(paste('review_edges_train', toString(threshold), '.RData', sep=''))
+    get.hitting.rate.nbi(W=W, probe.graph=probe.graph, train.graph=train.graph, outfilename=paste('hittingRateNBI',toString(threshold),'.RData', sep=''))
 }
