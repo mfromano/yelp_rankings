@@ -43,6 +43,15 @@ png(filename='figure4.png')
  dev.off()
  # http://stackoverflow.com/questions/23635662/editing-legend-text-labels-in-ggplot
 
+load(file='resultsdataframe15.RData')
+png(filename='figure5.png')
+ ggplot(data=results.df, aes(x = L)) +
+ geom_line(aes(x = L, y = nbimean, color='red')) +
+ geom_line(aes(x = L, y = cfmean, color='blue')) + 
+ labs(title='Hitting rates for NBI and CF', x='Ranking lengths', y='Hitting rate')+
+ scale_color_manual('Ranking method', labels=c('CF','NBI'), values=c('blue','red'))
+ dev.off()
+
  # Next, add count/L instead of other.....
 
 # Add coverage if have time

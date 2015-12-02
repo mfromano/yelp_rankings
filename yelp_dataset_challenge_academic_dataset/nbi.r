@@ -45,8 +45,8 @@ get.hitting.rate.nbi <- function(W, probe.graph, train.graph, outfilename='hitti
 
 run.nbi <- function(threshold=10)
 {
-    # load(paste('review_edges_train', toString(threshold), '.RData', sep=''))
-    # makeAndSaveW(train.graph, outfilename=paste('object_projection_train', toString(threshold), '.RData', sep=''))
+    load(paste('review_edges_train', toString(threshold), '.RData', sep=''))
+    makeAndSaveW(train.graph, outfilename=paste('object_projection_train', toString(threshold), '.RData', sep=''))
     load(paste('object_projection_train', toString(threshold), '.RData', sep=''))
     load(paste('review_edges_probe', toString(threshold), '.RData', sep=''))
     load(paste('review_edges_train', toString(threshold), '.RData', sep=''))
