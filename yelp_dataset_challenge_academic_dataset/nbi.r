@@ -17,6 +17,10 @@ hitting.rate <- function(graph.train, graph.probe, user.id, L, W)
     user.probe <- match(user.id, names(V(graph.probe)))
     nbhd <- neighbors(graph=graph.probe, v=user.probe)
 
+    # make sure that all of the vertices in nbhd are IN the training graph, otherwise will
+    # get result less than 1
+    nbhd <- V(graph.train)[intersect(V(graph.train), nbhd)]
+
     # compute hitting rate
     hr <- length(intersect(names(recommend.list), names(nbhd)))/length(nbhd)
     if (hr > 1)
