@@ -1,6 +1,0 @@
-exportPattern("^[[:alpha:]]+")
-import(igraph)
-import(functional)
-import(parallel)
-import(Matrix)
-import(ggplot2)
