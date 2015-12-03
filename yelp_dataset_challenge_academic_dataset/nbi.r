@@ -17,12 +17,12 @@ hitting.rate <- function(graph.train, graph.probe, user.id, L, W)
     user.probe <- match(user.id, names(V(graph.probe)))
     nbhd <- neighbors(graph=graph.probe, v=user.probe)
 
-    # make sure that all of the vertices in nbhd are IN the training graph, otherwise will
-    # get result less than 1
-    nbhd <- V(graph.train)[intersect(V(graph.train), nbhd)]
+    # nbhd <- V(graph.train)[intersect(V(graph.train), nbhd)]
 
     # compute hitting rate
     hr <- length(intersect(names(recommend.list), names(nbhd)))/length(nbhd)
+    
+
     if (hr > 1)
     {
         hr <- 1
@@ -34,7 +34,8 @@ hitting.rate <- function(graph.train, graph.probe, user.id, L, W)
 get.hitting.rate.nbi <- function(W, probe.graph, train.graph, outfilename='hittingRateNBI.RData')
 {
     num.probes <- length(V(probe.graph)[V(probe.graph)$isuser])
-    L <- seq(from=1,to=num.probes, by=20)
+    num.restaurants <- length(V(probe.graph)[!V(probe.graph)$isuser])
+    L <- seq(from=1,to=num.restaurants, by=20)
     x <- Matrix(0,num.probes,length(L))
     for (i in c(1:num.probes))
     {

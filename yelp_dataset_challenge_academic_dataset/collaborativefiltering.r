@@ -35,15 +35,12 @@ hitting.rate <- function(graph.train, graph.probe, user.id, similarity.matrix, L
     # get neighborhood of particular user in probe graph
     user.probe <- match(user.id, names(V(graph.probe)))
     nbhd <- neighbors(graph=graph.probe, v=user.probe)
-
-    # make sure that all of the vertices in nbhd are IN the training graph, otherwise will
-    # get result less than 1
-    nbhd <- V(graph.train)[intersect(V(graph.train), nbhd)]
-
     # compute hitting rate
     hr <- length(intersect(names(recommend.list), names(nbhd)))/length(nbhd)
     if (hr > 1)
     {
+        print(length(nbhd))
+        print(hr)
         hr <- 1
     }
     return(hr)
@@ -53,15 +50,17 @@ hitting.rate <- function(graph.train, graph.probe, user.id, similarity.matrix, L
 get.hitting.rate.cf <- function(probe.graph, train.graph, similarity.matrix, threshold, outfile='hittingRateCF.RData')
 {
     users.in.probe <- length(V(probe.graph)[V(probe.graph)$isuser])
-    L <- seq(from=1,to=users.in.probe, by=20)
+    restaurants.in.probe <- length(V(probe.graph)[!V(probe.graph)$isuser])
+    print(restaurants.in.probe)
+    L <- seq(from=1,to=restaurants.in.probe, by=20)
     x <- Matrix(0,users.in.probe,length(L))
 
     for (i in c(1:users.in.probe))
     {
         pth <- proc.time()
         user.id <- names(V(probe.graph)[V(probe.graph)$isuser])[i]
-        x[i,] <- unlist(mclapply(X=L, FUN=hitting.rate, graph.probe=probe.graph, graph.train=train.graph, similarity.matrix=similarity.matrix, user.id=user.id, threshold=threshold, mc.preschedule=TRUE, mc.cores=detectCores()))
-        # x[i,] <- sapply(X=L, FUN=hitting.rate, graph.probe=probe.graph, graph.train=train.graph, user.id=user.id, similarity.matrix=similarity.matrix, threshold=threshold)
+        # x[i,] <- unlist(mclapply(X=L, FUN=hitting.rate, graph.probe=probe.graph, graph.train=train.graph, similarity.matrix=similarity.matrix, user.id=user.id, threshold=threshold, mc.preschedule=TRUE, mc.cores=detectCores()))
+        x[i,] <- sapply(X=L, FUN=hitting.rate, graph.probe=probe.graph, graph.train=train.graph, user.id=user.id, similarity.matrix=similarity.matrix, threshold=threshold)
         print(proc.time() - pth)
     }
     save(x, file=outfile)
@@ -69,6 +68,8 @@ get.hitting.rate.cf <- function(probe.graph, train.graph, similarity.matrix, thr
 
 run.collaborative.filter <- function(threshold=0)
 {
+    downsample.graph(threshold)
+    split.graphs(threshold)
     load(paste('review_edges_train', toString(threshold),'.RData', sep=''))
     generate.similarityMatrix(gr=train.graph, outfile=paste('similarity_matrix_train',toString(threshold), '.RData', sep=''))
     load(paste('similarity_matrix_train',toString(threshold), '.RData', sep=''))

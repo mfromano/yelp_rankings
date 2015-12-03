@@ -24,7 +24,7 @@ downsample.graph <- function(threshold=10)
     save(gr, file=paste('review_edges_ds', toString(threshold), '.RData', sep=''))
 }
 
-split.graphs <- function(threshold=10)
+split.graphs <- function(threshold=10, rm.nonoverlap=TRUE)
 {
     load(file=paste('review_edges_ds', toString(threshold), '.RData', sep=''))
     rand.list <- sample(c(1:length(E(gr))), floor(length(E(gr))*.9), replace=FALSE)
@@ -32,6 +32,17 @@ split.graphs <- function(threshold=10)
     probe.list <- setdiff(E(gr),train.list)
     train.graph <- subgraph.edges(graph=gr, eids=train.list)
     probe.graph <- subgraph.edges(graph=gr, eids=probe.list)
+    orphan.nodes <- V(train.graph)[graph.strength(train.graph) == 0]
+    train.graph <- delete.vertices(graph=train.graph, v=orphan.nodes)
+    if (rm.nonoverlap)
+    {
+        # Next three lines delete vertices from probe set that are not in training set
+        probe.restaurants <- V(probe.graph)[!V(probe.graph)$isuser]
+        unshared.restaurants <- probe.restaurants[which(!names(probe.restaurants) %in% names(V(train.graph)[!V(train.graph)$isuser]))]
+        probe.graph <- delete.vertices(graph=probe.graph, v=unshared.restaurants)
+        orphan.nodes <- V(probe.graph)[graph.strength(probe.graph) == 0]
+        probe.graph <- delete.vertices(graph=probe.graph, v=orphan.nodes)
+    }
     save(train.graph, file=paste('review_edges_train',toString(threshold),'.RData', sep=''))
     save(probe.graph, file=paste('review_edges_probe',toString(threshold),'.RData', sep=''))
 }
