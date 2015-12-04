@@ -43,6 +43,8 @@ test.hitting.rate.nbi <- function(W, probe.graph, train.graph)
         nbhd <- neighbors(graph=probe.graph, v=user.probe)
         fp <- f.prime(graph=train.graph, Wmat=W, user=user)
         stopifnot(length(which(names(nbhd) %in% names(fp)))/length(names(nbhd)) >= 1)
+        print(nbhd)
+        print(intersect(names(nbhd), names(fp)))
         stopifnot(length(intersect(names(nbhd), names(fp))) / length(names(nbhd)) >= 1)
     }
     print('success!!')
