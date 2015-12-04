@@ -20,11 +20,12 @@ init.graph <- function(file='review_edges.csv')
 downsample.graph <- function(threshold=10)
 {
     gr <- init.graph()
+    gr <- simplify(gr)
     gr <- graph.threshold(gr=gr, threshold=threshold)
     save(gr, file=paste('review_edges_ds', toString(threshold), '.RData', sep=''))
 }
 
-split.graphs <- function(threshold=10, rm.nonoverlap=TRUE)
+split.graphs <- function(threshold=10)
 {
     load(file=paste('review_edges_ds', toString(threshold), '.RData', sep=''))
     rand.list <- sample(c(1:length(E(gr))), floor(length(E(gr))*.9), replace=FALSE)
@@ -34,15 +35,12 @@ split.graphs <- function(threshold=10, rm.nonoverlap=TRUE)
     probe.graph <- subgraph.edges(graph=gr, eids=probe.list)
     orphan.nodes <- V(train.graph)[graph.strength(train.graph) == 0]
     train.graph <- delete.vertices(graph=train.graph, v=orphan.nodes)
-    if (rm.nonoverlap)
-    {
-        # Next three lines delete vertices from probe set that are not in training set
-        probe.restaurants <- V(probe.graph)[!V(probe.graph)$isuser]
-        unshared.restaurants <- probe.restaurants[which(!names(probe.restaurants) %in% names(V(train.graph)[!V(train.graph)$isuser]))]
-        probe.graph <- delete.vertices(graph=probe.graph, v=unshared.restaurants)
-        orphan.nodes <- V(probe.graph)[graph.strength(probe.graph) == 0]
-        probe.graph <- delete.vertices(graph=probe.graph, v=orphan.nodes)
-    }
+    # Next three lines delete vertices from probe set that are not in training set
+    probe.restaurants <- V(probe.graph)[!V(probe.graph)$isuser]
+    unshared.restaurants <- probe.restaurants[which(!names(probe.restaurants) %in% names(V(train.graph)[!V(train.graph)$isuser]))]
+    probe.graph <- delete.vertices(graph=probe.graph, v=unshared.restaurants)
+    orphan.nodes <- V(probe.graph)[graph.strength(probe.graph) == 0]
+    probe.graph <- delete.vertices(graph=probe.graph, v=orphan.nodes)
     save(train.graph, file=paste('review_edges_train',toString(threshold),'.RData', sep=''))
     save(probe.graph, file=paste('review_edges_probe',toString(threshold),'.RData', sep=''))
 }
@@ -60,7 +58,7 @@ w.ij <- function(graph, i, j)
 {
     k.xj <- graph.strength(graph,vids=j)[[1]]
 
-    objects.in.common <- intersect(neighborhood(graph=graph,order=1,nodes=i)[[1]],neighborhood(graph=graph,order=1,nodes=j)[[1]])
+    objects.in.common <- which(neighbors(graph=graph,v=i) %in% neighbors(graph=graph,v=j))
     # for each object
     if (length(objects.in.common) > 0)
     {
@@ -120,7 +118,7 @@ f.prime <- function(graph, Wmat, user)
     # get names of objects
     vs <- which(V(graph)$type %in% 1)
     names(fp) <- names(V(graph)[vs])
-    fp <- fp[!(names(fp) %in% names(neighbors(graph=graph,v=user)))]
+    fp[names(fp) %in% names(neighbors(graph=graph,v=user))] <- -1
     fp <- sort(fp, decreasing=TRUE)
     return(fp)
 }
@@ -137,7 +135,7 @@ similarity.function <- function(user_i, user_j, graph)
 {
     n1 <- neighbors(graph=graph, v=user_i)
     n2 <- neighbors(graph=graph, v=user_j)
-    s.numerator <- length(intersect(n1,n2))
+    s.numerator <- length(which(n1 %in% n2))
     s.denominator <- min(length(n1), length(n2))
     return(s.numerator/s.denominator)
 }
@@ -152,7 +150,7 @@ cf.predicted.score <- function(graph, user, object, S)
         user.list <- V(graph)[V(graph)$isuser]
         # similarity_list <- sapply(user.list, similarity.function, user_j=user, graph=graph)
         similarity_list <- S[user,]
-        user.neighbors <- intersect(user.list, neighbors(graph=graph, v=V(graph)[object]))
+        user.neighbors <- which(user.list %in% neighbors(graph=graph, v=V(graph)[object]))
         user.neighbors <- setdiff(user.neighbors,user)
         numerator <- sum(unlist(similarity_list[user.neighbors]))
         denominator <- sum(unlist(similarity_list))
@@ -160,6 +158,7 @@ cf.predicted.score <- function(graph, user, object, S)
     }
     else
     {
+        print('poop')
         # get real recommended score if the user has rated the restaurant
         return(-1)
     }
@@ -185,14 +184,19 @@ generate.similarityMatrix <- function(gr, outfile)
 
 collaborative.filter <- function(user, train.graph, similarity_matrix, threshold)
 {
+    # set get handle to function that determines user's predicted score for a restaurant
     cf.ps.handle <- Curry(cf.predicted.score, graph=train.graph, user=user, S=similarity_matrix)
-    restaurant.indices <- which(V(train.graph)$type %in% 1) # gets indices of restaurants
-    pth <- proc.time()
-    outarray <- mclapply(restaurant.indices, cf.ps.handle, mc.preschedule=TRUE, mc.cores=detectCores())
-    print(proc.time()-pth)
+    # get indices of restaurants in training graph
+    restaurant.indices <- which(V(train.graph)$type %in% 1) 
+    # for this user, get recommendations for all restaurants
+    ratings.list <- mclapply(restaurant.indices, cf.ps.handle, mc.preschedule=TRUE, mc.cores=detectCores())
+    
     businesses <- names(V(train.graph)[restaurant.indices])
-    names(outarray) <- businesses
+    
+    names(ratings.list) <- businesses
+    
     ratings.list <- outarray
+    
     save(ratings.list, file=paste('cf_ratings/cf_ratings_user',toString(user),'_', toString(threshold),'.RData', sep=''))
 }
 
