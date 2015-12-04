@@ -158,7 +158,6 @@ cf.predicted.score <- function(graph, user, object, S)
     }
     else
     {
-        print('poop')
         # get real recommended score if the user has rated the restaurant
         return(-1)
     }
@@ -194,9 +193,7 @@ collaborative.filter <- function(user, train.graph, similarity_matrix, threshold
     businesses <- names(V(train.graph)[restaurant.indices])
     
     names(ratings.list) <- businesses
-    
-    ratings.list <- outarray
-    
+        
     save(ratings.list, file=paste('cf_ratings/cf_ratings_user',toString(user),'_', toString(threshold),'.RData', sep=''))
 }
 

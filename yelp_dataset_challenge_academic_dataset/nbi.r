@@ -43,8 +43,6 @@ test.hitting.rate.nbi <- function(W, probe.graph, train.graph)
         nbhd <- neighbors(graph=probe.graph, v=user.probe)
         fp <- f.prime(graph=train.graph, Wmat=W, user=user)
         stopifnot(length(which(names(nbhd) %in% names(fp)))/length(names(nbhd)) >= 1)
-        print(intersect(names(nbhd), names(fp)))
-        print(names(nbhd))
         stopifnot(length(intersect(names(nbhd), names(fp))) / length(names(nbhd)) >= 1)
     }
     print('success!!')
@@ -77,4 +75,12 @@ run.nbi <- function(threshold=10)
     load(paste('review_edges_probe', toString(threshold), '.RData', sep=''))
     load(paste('review_edges_train', toString(threshold), '.RData', sep=''))
     get.hitting.rate.nbi(W=W, probe.graph=probe.graph, train.graph=train.graph, outfilename=paste('hittingRateNBI',toString(threshold),'.RData', sep=''))
+}
+
+test.nbi <- function(threshold=9) {
+    load(paste('review_edges_train', toString(threshold), '.RData', sep=''))
+    load(paste('object_projection_train', toString(threshold), '.RData', sep=''))
+    load(paste('review_edges_probe', toString(threshold), '.RData', sep=''))
+    load(paste('review_edges_train', toString(threshold), '.RData', sep=''))
+    test.hitting.rate.nbi(W=W, probe.graph=probe.graph, train.graph=train.graph)
 }
