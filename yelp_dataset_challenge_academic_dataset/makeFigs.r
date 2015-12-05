@@ -33,7 +33,7 @@ dev.off()
 library(ggplot2)
 library(reshape)
 
-load(file='resultsdataframe.RData')
+load(file='resultsdataframe9.RData')
 png(filename='figure4.png')
  ggplot(data=results.df, aes(x = L)) +
  geom_line(aes(x = L, y = nbimean, color='red')) +
@@ -43,7 +43,7 @@ png(filename='figure4.png')
  dev.off()
  # http://stackoverflow.com/questions/23635662/editing-legend-text-labels-in-ggplot
 
-load(file='resultsdataframe15.RData')
+load(file='resultsdataframe14.RData')
 png(filename='figure5.png')
  ggplot(data=results.df, aes(x = L)) +
  geom_line(aes(x = L, y = nbimean, color='red')) +
@@ -57,4 +57,33 @@ png(filename='figure5.png')
 # Add coverage if have time
 # 95% CI?
 
-# figure out: if add noise, how stable will results be?
+# First, compare across different thresholds
+compare.nbi <- function(recommender.system='nbi')
+{
+    load('resultsdataframe14.RData')
+    results.df.14 <- results.df
+    results.df.14$L <- results.df.14$L / 1519
+
+    load('resultsdataframe9.RData')
+    results.df.9 <- results.df
+    results.df.9$L <- results.df.9$L / 1540
+
+    load('resultsdataframe4.RData')
+    results.df.4 <- results.df
+    results.df.4$L <- results.df.4$L / 1584
+
+switch(recommender.system,
+    'nbi'=ggplot() +
+        geom_line(data=results.df.4, aes(x=L, y=nbimean, color='green')) +
+        geom_line(data=results.df.9, aes(x=L, y=nbimean, color='blue')) +
+        geom_line(data=results.df.14, aes(x=L, y=nbimean, color='red')) +
+        labs(title='Hitting rates for NBI compared with different thresholds', x='Percent of ranking list', y='Hitting rate') +
+        scale_color_manual('Ranking method', labels=c('Threshold=5','Threshold=10','Threshold=15'), values=c('green','blue','red')),
+    'cf'=ggplot() +
+        geom_line(data=results.df.4, aes(x=L, y=cfmean, color='green')) +
+        geom_line(data=results.df.9, aes(x=L, y=cfmean, color='blue')) +
+        geom_line(data=results.df.14, aes(x=L, y=cfmean, color='red')) +
+        labs(title='Hitting rates for CF compared with different thresholds', x='Percent of ranking list', y='Hitting rate') +
+        scale_color_manual('Ranking method', labels=c('Threshold=5','Threshold=10','Threshold=15'), values=c('green','blue','red'))
+    )
+}

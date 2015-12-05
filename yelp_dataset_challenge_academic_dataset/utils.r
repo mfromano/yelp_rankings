@@ -203,3 +203,21 @@ makeAndSaveW <- function(gr, outfilename='object_projection_train.RData')
     W <- get.W(vs, gr)
     save(W,file=outfilename)
 }
+
+make.data.frame <- function(threshold)
+{
+    load(paste('hittingRateNBI',toString(threshold),'.RData', sep=''))
+    nbimean <- apply(X=x, MARGIN=2, FUN=mean)
+    L <- seq(from=1, to=(length(nbimean)*20), by=20)
+
+    load(paste('hittingRateCF',toString(threshold),'.RData', sep=''))
+    cfmean <- apply(X=x, MARGIN=2, FUN=mean)
+    # Normalization:
+    # for threshold=14, 1519 restaurants. For threshold=9, 1540 restaurants. For 4, 1584 restaurants
+    results.df <- data.frame(
+            nbimean=nbimean,
+            cfmean=cfmean,
+            L=L
+        )
+    save(results.df, file=paste('resultsdataframe', toString(threshold),'.RData', sep=''))
+}

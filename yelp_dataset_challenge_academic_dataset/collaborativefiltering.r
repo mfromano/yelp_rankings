@@ -83,12 +83,11 @@ get.hitting.rate.cf <- function(probe.graph, train.graph, similarity.matrix, thr
 
 run.collaborative.filter <- function(threshold=0)
 {
-    # downsample.graph(threshold)
-    # split.graphs(threshold)
     load(paste('review_edges_train', toString(threshold),'.RData', sep=''))
-    # generate.similarityMatrix(gr=train.graph, outfile=paste('similarity_matrix_train',toString(threshold), '.RData', sep=''))
+    generate.similarityMatrix(gr=train.graph, outfile=paste('similarity_matrix_train',toString(threshold), '.RData', sep=''))
     load(paste('similarity_matrix_train',toString(threshold), '.RData', sep=''))
-    sapply(X=which(V(train.graph)$isuser %in% 1), FUN=collaborative.filter, train.graph=train.graph, similarity_matrix=S, threshold=threshold)
+    # sapply(X=which(V(train.graph)$isuser %in% 1), FUN=collaborative.filter, train.graph=train.graph, similarity_matrix=S, threshold=threshold)
+    mclapply(X=which(V(train.graph)$isuser %in% 1), FUN=collaborative.filter, train.graph=train.graph, similarity_matrix=S, threshold=threshold, mc.preschedule=TRUE, mc.cores=detectCores())
     load(paste('review_edges_probe', toString(threshold),'.RData', sep=''))
     get.hitting.rate.cf(probe.graph, train.graph, similarity.matrix=S, threshold=threshold, outfile=paste('hittingRateCF',toString(threshold),'.RData', sep=''))
 }
