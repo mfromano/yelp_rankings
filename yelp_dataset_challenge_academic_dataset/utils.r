@@ -2,6 +2,10 @@ library(igraph)
 library(functional)
 library(parallel)
 library(Matrix)
+library(ggplot2)
+library(reshape)
+library(grid)
+library(gridExtra)
 
 init.graph <- function(file='review_edges.csv')
 {
@@ -220,4 +224,19 @@ make.data.frame <- function(threshold)
             L=L
         )
     save(results.df, file=paste('resultsdataframe', toString(threshold),'.RData', sep=''))
+}
+
+
+# THE FOLLOWING IS FROM http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
+grid_arrange_shared_legend <- function(...) {
+    plots <- list(...)
+    g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
+    legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+    lheight <- sum(legend$height)
+    grid.arrange(
+        do.call(arrangeGrob, lapply(plots, function(x)
+            x + theme(legend.position="none"))),
+        legend,
+        ncol = 1,
+        heights = unit.c(unit(1, "npc") - lheight, lheight))
 }
